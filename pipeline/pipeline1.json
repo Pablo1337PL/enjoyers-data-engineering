@@ -5,14 +5,7 @@
 			{
 				"name": "Copy_CSV_to_SQL",
 				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "Transform_Education_Data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
