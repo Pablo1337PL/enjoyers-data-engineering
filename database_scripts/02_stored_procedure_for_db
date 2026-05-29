@@ -34,18 +34,18 @@ BEGIN
     );
 
     INSERT INTO fact_education_cost (
-        Country, City, University, Program, Level, Duration_Years,
-        Tuition_USD, location, Visa_Fee_USD, Rent_USD, Insurance_USD, Exchange_Rate
+        University,       
+        location,      
+        Tuition_USD, 
+        Visa_Fee_USD, 
+        Rent_USD, 
+        Insurance_USD, 
+        Exchange_Rate     
     )
     SELECT 
-        stg.Country, 
-        stg.City, 
-        dm.UniversitiesID, 
-        stg.Program, 
-        stg.Level, 
-        stg.Duration_Years,
+        dm.UniversitiesID,
+        dt.TeritoryID,
         stg.Tuition_USD, 
-        dt.TeritoryID, 
         stg.Visa_Fee_USD, 
         stg.Rent_USD, 
         stg.Insurance_USD, 
@@ -54,7 +54,7 @@ BEGIN
     LEFT JOIN DimTerritory dt 
         ON stg.Country = dt.Country AND stg.City = dt.City
     LEFT JOIN DimMajor dm 
-        ON stg.University = dm.UniversityName AND stg.Program = stg.Program
+        ON stg.University = dm.UniversityName AND stg.Program = dm.Program
     LEFT JOIN DimCurrency dc 
         ON stg.Exchange_Rate = dc.Money;
 
