@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-enjoyers-etl"
+		},
+		"LS_Blob_EnjoyersStorage_connectionString": {
+			"value": ""
+		},
+		"LS_SQL_EnjoyersDatabase_password": {
+			"value": ""
+		},
+		"LS_SQL_EnjoyersDatabase_properties_typeProperties_server": {
+			"value": "enjoyers-database-server.database.windows.net"
+		},
+		"LS_SQL_EnjoyersDatabase_properties_typeProperties_database": {
+			"value": "Enjoyers_database"
+		},
+		"LS_SQL_EnjoyersDatabase_properties_typeProperties_userName": {
+			"value": "enjoyer"
+		}
+	}
+}
