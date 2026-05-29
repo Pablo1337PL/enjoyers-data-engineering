@@ -5,7 +5,14 @@
 			{
 				"name": "Copy_CSV_to_SQL",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Transform_Education_Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -199,6 +206,33 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "Transform_Education_Data",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Copy_CSV_to_SQL",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[sp_TransformEducationData]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_EnjoyersDatabase",
+					"type": "LinkedServiceReference"
+				}
 			}
 		],
 		"annotations": []
