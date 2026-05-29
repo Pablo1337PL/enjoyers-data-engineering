@@ -1,0 +1,72 @@
+{
+	"name": "DS_SQL_StgEducationCosts",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SQL_EnjoyersDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Country",
+				"type": "varchar"
+			},
+			{
+				"name": "City",
+				"type": "varchar"
+			},
+			{
+				"name": "University",
+				"type": "varchar"
+			},
+			{
+				"name": "Program",
+				"type": "varchar"
+			},
+			{
+				"name": "Level",
+				"type": "varchar"
+			},
+			{
+				"name": "Duration_Years",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Tuition_USD",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Living_Cost_Index",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Rent_USD",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Visa_Fee_USD",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Insurance_USD",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Exchange_Rate",
+				"type": "float",
+				"precision": 15
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "stg_education_costs"
+		}
+	}
+}

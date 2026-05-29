@@ -1,0 +1,72 @@
+{
+	"name": "DS_CSV_EducationCosts",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Blob_EnjoyersStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "education_costs.csv",
+				"container": "raw-data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Country",
+				"type": "String"
+			},
+			{
+				"name": "City",
+				"type": "String"
+			},
+			{
+				"name": "University",
+				"type": "String"
+			},
+			{
+				"name": "Program",
+				"type": "String"
+			},
+			{
+				"name": "Level",
+				"type": "String"
+			},
+			{
+				"name": "Duration_Years",
+				"type": "String"
+			},
+			{
+				"name": "Tuition_USD",
+				"type": "String"
+			},
+			{
+				"name": "Living_Cost_Index",
+				"type": "String"
+			},
+			{
+				"name": "Rent_USD",
+				"type": "String"
+			},
+			{
+				"name": "Visa_Fee_USD",
+				"type": "String"
+			},
+			{
+				"name": "Insurance_USD",
+				"type": "String"
+			},
+			{
+				"name": "Exchange_Rate",
+				"type": "String"
+			}
+		]
+	}
+}
