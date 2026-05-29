@@ -1,0 +1,15 @@
+{
+	"name": "adf-enjoyers-etl",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Enabled",
+			"editable": true
+		}
+	},
+	"location": "germanywestcentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "2476085f-b330-4706-b0cc-ccb100df56f5",
+		"tenantId": "3b50229c-cd78-4588-9bcf-97b7629e2f0f"
+	}
+}
