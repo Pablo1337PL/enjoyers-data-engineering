@@ -1,0 +1,12 @@
+{
+	"name": "DS_Rest_AdzunaJobs",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Rest_AdzunaAPI",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"schema": []
+	}
+}

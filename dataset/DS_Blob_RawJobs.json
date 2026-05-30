@@ -1,0 +1,28 @@
+{
+	"name": "DS_Blob_RawJobs",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Blob_EnjoyersStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"folderPath": "jobs",
+				"container": "raw-data"
+			}
+		},
+		"schema": {}
+	}
+}
