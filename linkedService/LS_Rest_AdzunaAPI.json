@@ -1,0 +1,12 @@
+{
+	"name": "LS_Rest_AdzunaAPI",
+	"properties": {
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://api.adzuna.com/v1/api/jobs/",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
