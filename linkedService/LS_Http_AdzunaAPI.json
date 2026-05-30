@@ -1,0 +1,12 @@
+{
+	"name": "LS_Http_AdzunaAPI",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://api.adzuna.com/v1/api/jobs/",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
