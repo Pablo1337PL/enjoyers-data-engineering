@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "HttpServer",
 		"typeProperties": {
-			"url": "https://api.adzuna.com/v1/api/jobs/",
+			"url": "https://api.adzuna.com",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}
