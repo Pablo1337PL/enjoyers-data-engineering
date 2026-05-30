@@ -5,14 +5,7 @@
 			{
 				"name": "Get_Cities_And_Codes",
 				"type": "Lookup",
-				"dependsOn": [
-					{
-						"activity": "ForEach1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -38,7 +31,14 @@
 			{
 				"name": "ForEach1",
 				"type": "ForEach",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Get_Cities_And_Codes",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
@@ -61,15 +61,15 @@
 							"userProperties": [],
 							"typeProperties": {
 								"source": {
-									"type": "RestSource",
-									"httpRequestTimeout": "00:01:40",
-									"requestInterval": "00.00:00:00.010",
-									"requestMethod": {
-										"value": "@concat(item().CountryCode, '/search/1?app_id=', pipeline().parameters.AdzunaAppId, '&app_key=', pipeline().parameters.AdzunaAppKey, '&where=', item().City, '&what=data')",
-										"type": "Expression"
+									"type": "JsonSource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET",
+										"additionalHeaders": "Accept: application/json\nContent-Type: application/json\nUser-Agent: python-requests/2.28.1",
+										"requestTimeout": ""
 									},
-									"paginationRules": {
-										"supportRFC5988": "true"
+									"formatSettings": {
+										"type": "JsonReadSettings"
 									}
 								},
 								"sink": {
@@ -85,8 +85,14 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "DS_Rest_AdzunaJobs",
-									"type": "DatasetReference"
+									"referenceName": "DS_Http_Adzuna",
+									"type": "DatasetReference",
+									"parameters": {
+										"RelativeUrlPath": {
+											"value": "@concat('https://api.adzuna.com/v1/api/jobs/', trim(item().CountryCode), '/search/1?app_id=', trim(pipeline().parameters.AdzunaAppId), '&app_key=', trim(pipeline().parameters.AdzunaAppKey), '&results_per_page=50&where=', uriComponent(trim(item().City)), '&what=data')",
+											"type": "Expression"
+										}
+									}
 								}
 							],
 							"outputs": [

@@ -5,8 +5,19 @@
 			"referenceName": "LS_Rest_AdzunaAPI",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"RelativeUrlPath": {
+				"type": "string"
+			}
+		},
 		"annotations": [],
 		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "@dataset().RelativeUrlPath",
+				"type": "Expression"
+			}
+		},
 		"schema": []
 	}
 }
