@@ -1,0 +1,36 @@
+{
+	"name": "DS_SQL_StgJobPostings",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SQL_EnjoyersDatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "StagingId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "RawJsonData",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SourceFileName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LoadDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "stg_job_postings"
+		}
+	}
+}

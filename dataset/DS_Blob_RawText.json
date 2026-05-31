@@ -1,0 +1,26 @@
+{
+	"name": "DS_Blob_RawText",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Blob_EnjoyersStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "raw-data"
+			},
+			"columnDelimiter": "\u0001",
+			"rowDelimiter": {
+				"value": "~",
+				"type": "Expression"
+			},
+			"escapeChar": "",
+			"firstRowAsHeader": false,
+			"quoteChar": ""
+		},
+		"schema": []
+	}
+}
