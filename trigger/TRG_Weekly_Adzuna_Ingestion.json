@@ -1,0 +1,39 @@
+{
+	"name": "TRG_Weekly_Adzuna_Ingestion",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_Ingest_Adzuna",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"AdzunaAppId": "b2486541",
+					"AdzunaAppKey": "d63e05cde4a5e6f64ad24471d2461a4f"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Week",
+				"interval": 1,
+				"startTime": "2026-05-31T08:30:00",
+				"timeZone": "Central European Standard Time",
+				"schedule": {
+					"minutes": [
+						30
+					],
+					"hours": [
+						2
+					],
+					"weekDays": [
+						"Monday"
+					]
+				}
+			}
+		}
+	}
+}
