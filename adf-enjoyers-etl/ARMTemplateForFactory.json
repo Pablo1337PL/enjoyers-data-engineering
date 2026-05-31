@@ -15,6 +15,14 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'LS_SQL_EnjoyersDatabase'"
 		},
+		"LS_Http_AdzunaAPI_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "@{linkedService().ApiUrl}"
+		},
+		"LS_Rest_AdzunaAPI_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.adzuna.com/v1/api/jobs/"
+		},
 		"LS_SQL_EnjoyersDatabase_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "enjoyers-database-server.database.windows.net"
@@ -26,12 +34,621 @@
 		"LS_SQL_EnjoyersDatabase_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "enjoyer"
+		},
+		"TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppId": {
+			"type": "string",
+			"defaultValue": "b2486541"
+		},
+		"TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppKey": {
+			"type": "string",
+			"defaultValue": "d63e05cde4a5e6f64ad24471d2461a4f"
 		}
 	},
 	"variables": {
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Ingest_Adzuna')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get_Cities_And_Codes",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT DISTINCT \n    e.City, \n    m.CountryCode \nFROM stg_education_costs e\nJOIN DimCountryMapping m ON e.Country = m.CountryName\nWHERE e.City IS NOT NULL",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQL_StgEducationCosts",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get_Cities_And_Codes",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get_Cities_And_Codes').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Fetch_Adzuna_JSON",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "HttpReadSettings",
+												"requestMethod": "GET",
+												"additionalHeaders": "Accept: application/json\nContent-Type: application/json\nUser-Agent: python-requests/2.28.1",
+												"requestTimeout": ""
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"sink": {
+											"type": "JsonSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "JsonWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_Http_Adzuna",
+											"type": "DatasetReference",
+											"parameters": {
+												"RelativeUrlPath": {
+													"value": "@concat('https://api.adzuna.com/v1/api/jobs/', trim(item().CountryCode), '/search/1?app_id=', trim(pipeline().parameters.AdzunaAppId), '&app_key=', trim(pipeline().parameters.AdzunaAppKey), '&results_per_page=50&where=', uriComponent(trim(item().City)), '&what=data')",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_Blob_RawJobs",
+											"type": "DatasetReference",
+											"parameters": {
+												"FileName": {
+													"value": "@concat(item().CountryCode, '_', item().City, '_raw.json')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"AdzunaAppId": {
+						"type": "string",
+						"defaultValue": "b2486541"
+					},
+					"AdzunaAppKey": {
+						"type": "string",
+						"defaultValue": "d63e05cde4a5e6f64ad24471d2461a4f"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_StgEducationCosts')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Http_Adzuna')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Blob_RawJobs')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_CSV_to_SQL",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "Country",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Country",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "City",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "City",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "University",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "University",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Program",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Program",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Level",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Level",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "Duration_Years",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Duration_Years",
+											"type": "Double",
+											"physicalType": "float"
+										}
+									},
+									{
+										"source": {
+											"name": "Tuition_USD",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Tuition_USD",
+											"type": "Double",
+											"physicalType": "float"
+										}
+									},
+									{
+										"source": {
+											"name": "Living_Cost_Index",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Living_Cost_Index",
+											"type": "Double",
+											"physicalType": "float"
+										}
+									},
+									{
+										"source": {
+											"name": "Rent_USD",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Rent_USD",
+											"type": "Double",
+											"physicalType": "float"
+										}
+									},
+									{
+										"source": {
+											"name": "Visa_Fee_USD",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Visa_Fee_USD",
+											"type": "Double",
+											"physicalType": "float"
+										}
+									},
+									{
+										"source": {
+											"name": "Insurance_USD",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Insurance_USD",
+											"type": "Double",
+											"physicalType": "float"
+										}
+									},
+									{
+										"source": {
+											"name": "Exchange_Rate",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Exchange_Rate",
+											"type": "Double",
+											"physicalType": "float"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_CSV_EducationCosts",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_SQL_StgEducationCosts",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_CSV_EducationCosts')]",
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_StgEducationCosts')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Blob_RawJobs')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Blob_EnjoyersStorage",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"folderPath": "jobs",
+						"container": "raw-data"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_Blob_EnjoyersStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_CSV_EducationCosts')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Blob_EnjoyersStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "education_costs.csv",
+						"container": "raw-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Country",
+						"type": "String"
+					},
+					{
+						"name": "City",
+						"type": "String"
+					},
+					{
+						"name": "University",
+						"type": "String"
+					},
+					{
+						"name": "Program",
+						"type": "String"
+					},
+					{
+						"name": "Level",
+						"type": "String"
+					},
+					{
+						"name": "Duration_Years",
+						"type": "String"
+					},
+					{
+						"name": "Tuition_USD",
+						"type": "String"
+					},
+					{
+						"name": "Living_Cost_Index",
+						"type": "String"
+					},
+					{
+						"name": "Rent_USD",
+						"type": "String"
+					},
+					{
+						"name": "Visa_Fee_USD",
+						"type": "String"
+					},
+					{
+						"name": "Insurance_USD",
+						"type": "String"
+					},
+					{
+						"name": "Exchange_Rate",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_Blob_EnjoyersStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Http_Adzuna')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Http_AdzunaAPI",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ApiUrl": "@dataset().RelativeUrlPath"
+					}
+				},
+				"parameters": {
+					"RelativeUrlPath": {
+						"type": "string",
+						"defaultValue": "@dataset().RelativeUrlPath"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_Http_AdzunaAPI')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Rest_AdzunaJobs')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Rest_AdzunaAPI",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"RelativeUrlPath": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {
+					"relativeUrl": {
+						"value": "@dataset().RelativeUrlPath",
+						"type": "Expression"
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_Rest_AdzunaAPI')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_SQL_StgEducationCosts')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_EnjoyersDatabase",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Country",
+						"type": "varchar"
+					},
+					{
+						"name": "City",
+						"type": "varchar"
+					},
+					{
+						"name": "University",
+						"type": "varchar"
+					},
+					{
+						"name": "Program",
+						"type": "varchar"
+					},
+					{
+						"name": "Level",
+						"type": "varchar"
+					},
+					{
+						"name": "Duration_Years",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Tuition_USD",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Living_Cost_Index",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Rent_USD",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Visa_Fee_USD",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Insurance_USD",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Exchange_Rate",
+						"type": "float",
+						"precision": 15
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "stg_education_costs"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQL_EnjoyersDatabase')]"
+			]
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/LS_Blob_EnjoyersStorage')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
@@ -41,6 +658,41 @@
 				"type": "AzureBlobStorage",
 				"typeProperties": {
 					"connectionString": "[parameters('LS_Blob_EnjoyersStorage_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_Http_AdzunaAPI')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"ApiUrl": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('LS_Http_AdzunaAPI_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_Rest_AdzunaAPI')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('LS_Rest_AdzunaAPI_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
 				}
 			},
 			"dependsOn": []
@@ -66,6 +718,50 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TRG_Weekly_Adzuna_Ingestion')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "PL_Ingest_Adzuna",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"AdzunaAppId": "[parameters('TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppId')]",
+							"AdzunaAppKey": "[parameters('TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppKey')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2026-05-31T08:30:00",
+						"timeZone": "Central European Standard Time",
+						"schedule": {
+							"minutes": [
+								30
+							],
+							"hours": [
+								2
+							],
+							"weekDays": [
+								"Monday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_Ingest_Adzuna')]"
+			]
 		}
 	]
 }

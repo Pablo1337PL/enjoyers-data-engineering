@@ -11,6 +11,12 @@
 		"LS_SQL_EnjoyersDatabase_password": {
 			"value": ""
 		},
+		"LS_Http_AdzunaAPI_properties_typeProperties_url": {
+			"value": "@{linkedService().ApiUrl}"
+		},
+		"LS_Rest_AdzunaAPI_properties_typeProperties_url": {
+			"value": "https://api.adzuna.com/v1/api/jobs/"
+		},
 		"LS_SQL_EnjoyersDatabase_properties_typeProperties_server": {
 			"value": "enjoyers-database-server.database.windows.net"
 		},
@@ -19,6 +25,12 @@
 		},
 		"LS_SQL_EnjoyersDatabase_properties_typeProperties_userName": {
 			"value": "enjoyer"
+		},
+		"TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppId": {
+			"value": "b2486541"
+		},
+		"TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppKey": {
+			"value": "d63e05cde4a5e6f64ad24471d2461a4f"
 		}
 	}
 }

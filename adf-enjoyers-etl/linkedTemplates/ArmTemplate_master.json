@@ -15,6 +15,14 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'LS_SQL_EnjoyersDatabase'"
 		},
+		"LS_Http_AdzunaAPI_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "@{linkedService().ApiUrl}"
+		},
+		"LS_Rest_AdzunaAPI_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.adzuna.com/v1/api/jobs/"
+		},
 		"LS_SQL_EnjoyersDatabase_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "enjoyers-database-server.database.windows.net"
@@ -26,6 +34,14 @@
 		"LS_SQL_EnjoyersDatabase_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "enjoyer"
+		},
+		"TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppId": {
+			"type": "string",
+			"defaultValue": "b2486541"
+		},
+		"TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppKey": {
+			"type": "string",
+			"defaultValue": "d63e05cde4a5e6f64ad24471d2461a4f"
 		},
 		"containerUri": {
 			"type": "string",
@@ -60,6 +76,12 @@
 					"LS_SQL_EnjoyersDatabase_password": {
 						"value": "[parameters('LS_SQL_EnjoyersDatabase_password')]"
 					},
+					"LS_Http_AdzunaAPI_properties_typeProperties_url": {
+						"value": "[parameters('LS_Http_AdzunaAPI_properties_typeProperties_url')]"
+					},
+					"LS_Rest_AdzunaAPI_properties_typeProperties_url": {
+						"value": "[parameters('LS_Rest_AdzunaAPI_properties_typeProperties_url')]"
+					},
 					"LS_SQL_EnjoyersDatabase_properties_typeProperties_server": {
 						"value": "[parameters('LS_SQL_EnjoyersDatabase_properties_typeProperties_server')]"
 					},
@@ -68,6 +90,12 @@
 					},
 					"LS_SQL_EnjoyersDatabase_properties_typeProperties_userName": {
 						"value": "[parameters('LS_SQL_EnjoyersDatabase_properties_typeProperties_userName')]"
+					},
+					"TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppId": {
+						"value": "[parameters('TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppId')]"
+					},
+					"TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppKey": {
+						"value": "[parameters('TRG_Weekly_Adzuna_Ingestion_properties_PL_Ingest_Adzuna_parameters_AdzunaAppKey')]"
 					}
 				}
 			},
