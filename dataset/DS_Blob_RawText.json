@@ -12,14 +12,14 @@
 				"type": "AzureBlobStorageLocation",
 				"container": "raw-data"
 			},
-			"columnDelimiter": "\u0001",
+			"columnDelimiter": ",",
 			"rowDelimiter": {
-				"value": "~",
+				"value": "@uriComponentToString('%02')",
 				"type": "Expression"
 			},
 			"escapeChar": "",
-			"firstRowAsHeader": false,
-			"quoteChar": ""
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
 		},
 		"schema": []
 	}
