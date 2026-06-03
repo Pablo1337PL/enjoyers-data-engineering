@@ -568,7 +568,7 @@
 						"type": "AzureBlobStorageLocation",
 						"container": "raw-data"
 					},
-					"columnDelimiter": ",",
+					"columnDelimiter": "\u0001",
 					"rowDelimiter": {
 						"value": "@uriComponentToString('%02')",
 						"type": "Expression"
