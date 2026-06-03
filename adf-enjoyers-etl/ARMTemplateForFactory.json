@@ -69,7 +69,7 @@
 						"typeProperties": {
 							"source": {
 								"type": "AzureSqlSource",
-								"sqlReaderQuery": "SELECT DISTINCT \n    e.City, \n    m.CountryCode \nFROM stg_education_costs e\nJOIN DimCountryMapping m ON e.Country = m.CountryName\nWHERE e.City IS NOT NULL",
+								"sqlReaderQuery": "SELECT DISTINCT e.City, m.CountryCode \nFROM stg_education_costs e\nJOIN DimCountryMapping m ON e.Country = m.CountryName\nWHERE e.City IS NOT NULL \n  AND m.IsSupportedByAdzuna = 1;",
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
