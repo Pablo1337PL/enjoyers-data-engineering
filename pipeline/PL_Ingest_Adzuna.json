@@ -170,7 +170,7 @@
 						"mappings": [
 							{
 								"source": {
-									"ordinal": 1
+									"name": "Prop_0"
 								},
 								"sink": {
 									"name": "RawJsonData",
@@ -179,7 +179,7 @@
 							},
 							{
 								"source": {
-									"ordinal": 2
+									"name": "NazwaPliku"
 								},
 								"sink": {
 									"name": "SourceFileName",
@@ -188,7 +188,7 @@
 							},
 							{
 								"source": {
-									"ordinal": 3
+									"name": "DataLadowania"
 								},
 								"sink": {
 									"name": "LoadDate",
@@ -215,6 +215,60 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "Exec_Parse_JSON",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Load_to_STG",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_01_Parse_JSON_To_Staging]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_EnjoyersDatabase",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Exec_Load_Fact",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Exec_Parse_JSON",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_99_Load_FactJobPostings]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_EnjoyersDatabase",
+					"type": "LinkedServiceReference"
+				}
 			}
 		],
 		"parameters": {
