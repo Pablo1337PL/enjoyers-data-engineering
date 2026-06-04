@@ -170,7 +170,7 @@
 						"mappings": [
 							{
 								"source": {
-									"ordinal": 1
+									"name": "Prop_0"
 								},
 								"sink": {
 									"name": "RawJsonData",
@@ -179,7 +179,7 @@
 							},
 							{
 								"source": {
-									"ordinal": 2
+									"name": "NazwaPliku"
 								},
 								"sink": {
 									"name": "SourceFileName",
@@ -188,7 +188,7 @@
 							},
 							{
 								"source": {
-									"ordinal": 3
+									"name": "DataLadowania"
 								},
 								"sink": {
 									"name": "LoadDate",
