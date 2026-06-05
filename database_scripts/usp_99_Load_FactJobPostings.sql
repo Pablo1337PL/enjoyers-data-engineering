@@ -20,31 +20,7 @@ BEGIN
     WHERE rn = 1;
 
     -- =========================================================================
-    -- 2. AUTOMATYCZNE UZUPEŁNIANIE BRAKUJĄCYCH WYMIARÓW (Inferred Members)
-    -- =========================================================================
-    
-    INSERT INTO DimCompanies (CompanyName, ValidFrom, IsCurrent)
-    SELECT DISTINCT p.company_name, @CurrentDate, 1
-    FROM #DeduplicatedJobs p
-    WHERE p.company_name IS NOT NULL
-      AND NOT EXISTS (
-          SELECT 1 FROM DimCompanies d 
-          WHERE d.CompanyName = p.company_name AND d.IsCurrent = 1
-      );
-
-    INSERT INTO DimAtributes (ContractTime, JobCategory, ValidFrom, IsCurrent)
-    SELECT DISTINCT p.contract_time, p.category_label, @CurrentDate, 1
-    FROM #DeduplicatedJobs p
-    WHERE (p.contract_time IS NOT NULL OR p.category_label IS NOT NULL)
-      AND NOT EXISTS (
-          SELECT 1 FROM DimAtributes d 
-          WHERE ISNULL(d.ContractTime, '') = ISNULL(p.contract_time, '') 
-            AND ISNULL(d.JobCategory, '') = ISNULL(p.category_label, '') 
-            AND d.IsCurrent = 1
-      );
-
-    -- =========================================================================
-    -- 3. AKTUALIZACJA STATUSU OFERT (is_active)
+    -- 2. AKTUALIZACJA STATUSU OFERT (is_active)
     -- =========================================================================
 
     -- A. Dezaktywacja
@@ -99,11 +75,12 @@ BEGIN
         LEFT JOIN DimCompanies dcomp ON dcomp.CompanyName = p.company_name AND dcomp.IsCurrent = 1
         LEFT JOIN DimAtributes da ON ISNULL(da.ContractTime, '') = ISNULL(p.contract_time, '') AND ISNULL(da.JobCategory, '') = ISNULL(p.category_label, '') AND da.IsCurrent = 1
         LEFT JOIN DimDate dd ON dd.DateID = CAST(CONVERT(VARCHAR(8), CAST(p.created_at AS DATE), 112) AS INT)
+        LEFT JOIN DimCurrency dc ON dc.Money = sec.Exchange_Rate AND dc.IsCurrent = 1
     )
 
     INSERT INTO fact_job_postings (
         job_id, title, location, contract_attributes, 
-        salary_min, salary_mean, salary_max, url, company, created_at, is_active
+        salary_min, salary_mean, salary_max, url, company, created_at, is_active, CurrencyID
     )
     SELECT 
         job_id, 
