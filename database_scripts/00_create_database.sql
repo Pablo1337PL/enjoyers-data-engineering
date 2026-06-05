@@ -129,4 +129,7 @@ ADD CONSTRAINT FK_JobPostings_Company FOREIGN KEY (company) REFERENCES DimCompan
 
 ALTER TABLE fact_job_postings
 ADD CONSTRAINT FK_JobPostings_Date FOREIGN KEY (created_at) REFERENCES DimDate(DateID);
+
+ALTER TABLE fact_job_postings
+ADD CONSTRAINT FK_JobPostings_Currency FOREIGN KEY (CurrencyID) REFERENCES DimCurrency(CurrencyID);
 GO

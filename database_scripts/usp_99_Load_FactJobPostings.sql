@@ -89,6 +89,7 @@ BEGIN
             dcomp.CompaniesID AS company, 
             dd.DateID AS created_at,
             1 AS is_active,
+            dc.CurrencyID,
             
             ROW_NUMBER() OVER(PARTITION BY p.job_id ORDER BY dt.TeritoryID DESC) as final_rn
             
@@ -115,7 +116,8 @@ BEGIN
         url, 
         company, 
         created_at, 
-        is_active
+        is_active,
+        CurrencyID
     FROM JoinedData
     WHERE final_rn = 1 
       AND NOT EXISTS (
