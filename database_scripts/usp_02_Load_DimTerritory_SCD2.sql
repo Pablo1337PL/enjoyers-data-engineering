@@ -1,21 +1,46 @@
-CREATE PROCEDURE usp_02_Load_DimTerritory_SCD2
+CREATE OR ALTER PROCEDURE usp_02_Load_DimTerritory_SCD2
 AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE @CurrentDate DATETIME2 = GETDATE();
 
-    -- A. Zabezpieczenie unikalnych danych do TABELI TYMCZASOWEJ (#SourceData)
-    -- Usuwamy ją, jeśli z jakiegoś powodu została z poprzedniego uruchomienia
+    -- A. Tabela tymczasowa i średnie współrzędne
     IF OBJECT_ID('tempdb..#SourceData') IS NOT NULL DROP TABLE #SourceData;
     
+    WITH CityCoordinates AS (
+        SELECT 
+            sec.City,
+            ROUND(AVG(pj.latitude), 3) AS AvgLatitude,
+            ROUND(AVG(pj.longitude), 3) AS AvgLongitude
+        FROM stg_education_costs sec
+        JOIN stg_parsed_jobs pj ON pj.SourceFileName LIKE '%' + sec.City + '%'
+        WHERE pj.latitude IS NOT NULL AND pj.longitude IS NOT NULL
+        GROUP BY sec.City
+    )
     SELECT DISTINCT 
-        Country, 
-        City, 
-        Living_Cost_Index
-    INTO #SourceData  -- <--- Tworzy tabelę tymczasową w locie
-    FROM stg_education_costs;
+        sec.Country, 
+        sec.City, 
+        sec.Living_Cost_Index,
+        cc.AvgLatitude AS Latitude,
+        cc.AvgLongitude AS Longitude
+    INTO #SourceData
+    FROM stg_education_costs sec
+    LEFT JOIN CityCoordinates cc ON sec.City = cc.City;
     
-    -- B. Zakończenie "życia" starych rekordów, jeśli zmienił się np. koszt życia
+    -- B.1. SCD1: Aktualizacja współrzędnych (nadpisanie)
+    UPDATE target
+    SET target.Latitude = source.Latitude,
+        target.Longitude = source.Longitude
+    FROM DimTerritory target
+    JOIN #SourceData source ON target.Country = source.Country AND target.City = source.City
+    WHERE target.IsCurrent = 1 
+      AND (
+          ISNULL(target.Latitude, -999) <> ISNULL(source.Latitude, -999)
+          OR ISNULL(target.Longitude, -999) <> ISNULL(source.Longitude, -999)
+      )
+      AND ISNULL(target.LivingCostIndex, -1) = ISNULL(source.Living_Cost_Index, -1);
+
+    -- B.2. SCD2: Zamknięcie starych rekordów (zmiana LivingCostIndex)
     UPDATE target
     SET target.IsCurrent = 0, target.ValidTo = @CurrentDate
     FROM DimTerritory target
@@ -23,23 +48,26 @@ BEGIN
     WHERE target.IsCurrent = 1 
       AND ISNULL(target.LivingCostIndex, -1) <> ISNULL(source.Living_Cost_Index, -1);
 
-    -- C. Wstawienie nowych miast lub nowych wersji istniejących miast
-    INSERT INTO DimTerritory (Country, City, LivingCostIndex, ValidFrom, ValidTo, IsCurrent)
+    -- C. Wstawienie nowych i zaktualizowanych rekordów
+    INSERT INTO DimTerritory (Country, City, LivingCostIndex, Latitude, Longitude, ValidFrom, ValidTo, IsCurrent)
     SELECT 
         s.Country, 
         s.City, 
         s.Living_Cost_Index, 
+        s.Latitude,
+        s.Longitude,
         @CurrentDate, 
         NULL, 
         1
     FROM #SourceData s
     WHERE NOT EXISTS (
-        -- Nie wstawiaj, jeśli aktualna wersja jest identyczna z tą, która już istnieje
         SELECT 1 FROM DimTerritory t 
-        WHERE t.Country = s.Country AND t.City = s.City AND t.IsCurrent = 1
+        WHERE t.Country = s.Country 
+          AND t.City = s.City 
+          AND t.IsCurrent = 1
     );
 
-    -- D. Sprzątanie (dobra praktyka)
+    -- D. Sprzątanie
     DROP TABLE #SourceData;
 END;
 GO
