@@ -4,9 +4,9 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @CurrentDate DATETIME2 = GETDATE();
 
-    -- A. Tabela tymczasowa i średnie współrzędne
     IF OBJECT_ID('tempdb..#SourceData') IS NOT NULL DROP TABLE #SourceData;
     
+    -- Wyliczamy średnie współrzędne z ofert pracy
     WITH CityCoordinates AS (
         SELECT 
             sec.City,
@@ -16,18 +16,33 @@ BEGIN
         JOIN stg_parsed_jobs pj ON pj.SourceFileName LIKE '%' + sec.City + '%'
         WHERE pj.latitude IS NOT NULL AND pj.longitude IS NOT NULL
         GROUP BY sec.City
+    ),
+    -- Wyliczamy jeden, uśredniony Living Cost Index dla miasta
+    AggregatedSource AS (
+        SELECT 
+            Country, 
+            City, 
+            ROUND(AVG(Living_Cost_Index), 2) AS Living_Cost_Index
+        FROM stg_education_costs
+        WHERE City IS NOT NULL
+        GROUP BY Country, City
     )
-    SELECT DISTINCT 
+    
+    -- Łączymy uśrednione koszty z uśrednionymi współrzędnymi
+    SELECT 
         sec.Country, 
         sec.City, 
         sec.Living_Cost_Index,
         cc.AvgLatitude AS Latitude,
         cc.AvgLongitude AS Longitude
     INTO #SourceData
-    FROM stg_education_costs sec
+    FROM AggregatedSource sec
     LEFT JOIN CityCoordinates cc ON sec.City = cc.City;
     
-    -- B.1. SCD1: Aktualizacja współrzędnych (nadpisanie)
+    -- ==========================================
+    -- LOGIKA SCD 1 i 2
+    -- ==========================================
+
     UPDATE target
     SET target.Latitude = source.Latitude,
         target.Longitude = source.Longitude
@@ -40,7 +55,6 @@ BEGIN
       )
       AND ISNULL(target.LivingCostIndex, -1) = ISNULL(source.Living_Cost_Index, -1);
 
-    -- B.2. SCD2: Zamknięcie starych rekordów (zmiana LivingCostIndex)
     UPDATE target
     SET target.IsCurrent = 0, target.ValidTo = @CurrentDate
     FROM DimTerritory target
@@ -48,7 +62,6 @@ BEGIN
     WHERE target.IsCurrent = 1 
       AND ISNULL(target.LivingCostIndex, -1) <> ISNULL(source.Living_Cost_Index, -1);
 
-    -- C. Wstawienie nowych i zaktualizowanych rekordów
     INSERT INTO DimTerritory (Country, City, LivingCostIndex, Latitude, Longitude, ValidFrom, ValidTo, IsCurrent)
     SELECT 
         s.Country, 
@@ -67,7 +80,6 @@ BEGIN
           AND t.IsCurrent = 1
     );
 
-    -- D. Sprzątanie
     DROP TABLE #SourceData;
 END;
 GO
