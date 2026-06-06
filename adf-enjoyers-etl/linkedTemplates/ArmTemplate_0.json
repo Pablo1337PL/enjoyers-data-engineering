@@ -1026,6 +1026,87 @@
 								"parameters": {}
 							}
 						]
+					},
+					{
+						"name": "Dim_Major",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Copy_CSV_to_SQL",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[usp_06_Load_DimMajor_SCD2]"
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_SQL_EnjoyersDatabase",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Dim_Currency",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Dim_Major",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[usp_05_Load_DimCurrency_SCD2]"
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_SQL_EnjoyersDatabase",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Load_Education_Fact",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Dim_Currency",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[usp_98_Load_FactEducationCost]"
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_SQL_EnjoyersDatabase",
+							"type": "LinkedServiceReference"
+						}
 					}
 				],
 				"policy": {
@@ -1035,7 +1116,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_CSV_EducationCosts')]",
-				"[concat(variables('factoryId'), '/datasets/DS_SQL_StgEducationCosts')]"
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_StgEducationCosts')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQL_EnjoyersDatabase')]"
 			]
 		},
 		{
