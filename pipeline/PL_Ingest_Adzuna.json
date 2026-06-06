@@ -248,7 +248,7 @@
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Exec_Parse_JSON",
+						"activity": "Dim_Attributes",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -264,6 +264,87 @@
 				"userProperties": [],
 				"typeProperties": {
 					"storedProcedureName": "[dbo].[usp_99_Load_FactJobPostings]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_EnjoyersDatabase",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Dim_Territory",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Exec_Parse_JSON",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_02_Load_DimTerritory_SCD2]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_EnjoyersDatabase",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Dim_Companies",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Dim_Territory",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_03_Load_DimCompanies_SCD2]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_EnjoyersDatabase",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Dim_Attributes",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Dim_Companies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_04_Load_DimAtributes_SCD2]"
 				},
 				"linkedServiceName": {
 					"referenceName": "LS_SQL_EnjoyersDatabase",
