@@ -74,7 +74,7 @@ BEGIN
         LEFT JOIN DimTerritory dt ON dt.City = sec.City AND dt.IsCurrent = 1
         LEFT JOIN DimCompanies dcomp ON dcomp.CompanyName = p.company_name AND dcomp.IsCurrent = 1
         LEFT JOIN DimAtributes da ON ISNULL(da.ContractTime, '') = ISNULL(p.contract_time, '') AND ISNULL(da.JobCategory, '') = ISNULL(p.category_label, '') AND da.IsCurrent = 1
-        LEFT JOIN DimDate dd ON dd.DateID = CAST(CONVERT(VARCHAR(8), CAST(p.created_at AS DATE), 112) AS INT)
+        LEFT JOIN DimDate dd ON dd.DateID = TRY_CAST(REPLACE(LEFT(p.created_at, 10), '-', '') AS INT)
         LEFT JOIN DimCurrency dc ON dc.Money = sec.Exchange_Rate AND dc.IsCurrent = 1
     )
 
